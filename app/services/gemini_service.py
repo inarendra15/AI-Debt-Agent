@@ -1,0 +1,133 @@
+import json
+
+from google import genai
+
+from app.config import GEMINI_API_KEY, MODEL_NAME
+from app.core.prompts import SYSTEM_PROMPT
+from app.services.conversation_service import get_history
+
+# Initialize Gemini Client
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+def ask_gemini(customer: dict, customer_message: str) -> dict:
+    """
+    Generate a structured AI response using:
+    - Customer details
+    - Conversation history
+    - Professional debt collection prompt
+
+    Returns:
+        dict
+    """
+
+    # Fetch previous conversation
+    history = get_history(customer["customer_id"])
+
+    conversation = ""
+
+    for msg in history:
+        if msg["role"] == "customer":
+            conversation += f"Customer: {msg['message']}\n"
+        else:
+            conversation += f"Agent: {msg['message']}\n"
+
+    # Build prompt
+    prompt = f"""
+{SYSTEM_PROMPT}
+
+--------------------------------------------------
+CUSTOMER INFORMATION
+--------------------------------------------------
+
+Customer ID: {customer['customer_id']}
+Name: {customer['name']}
+Loan Type: {customer['loan_type']}
+Loan Amount: ₹{customer['loan_amount']}
+Outstanding Amount: ₹{customer['outstanding']}
+Monthly EMI: ₹{customer['emi']}
+Days Overdue: {customer['days_overdue']}
+
+--------------------------------------------------
+CONVERSATION HISTORY
+--------------------------------------------------
+
+{conversation}
+
+--------------------------------------------------
+CURRENT CUSTOMER MESSAGE
+--------------------------------------------------
+
+Customer: {customer_message}
+"""
+
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
+
+        response_text = response.text.strip()
+
+        # Remove markdown if Gemini wraps JSON
+        if response_text.startswith("```json"):
+            response_text = (
+                response_text.replace("```json", "")
+                .replace("```", "")
+                .strip()
+            )
+
+        elif response_text.startswith("```"):
+            response_text = (
+                response_text.replace("```", "")
+                .strip()
+            )
+
+        result = json.loads(response_text)
+
+        # Validate required fields
+        required_keys = [
+            "reply",
+            "intent",
+            "sentiment",
+            "payment_commitment",
+            "followup_days",
+            "risk_level",
+            "need_human_agent",
+        ]
+
+        for key in required_keys:
+            if key not in result:
+                raise ValueError(f"Missing key: {key}")
+
+        return result
+
+    except json.JSONDecodeError:
+        print("\n========== JSON Decode Error ==========")
+        print(response_text)
+        print("=======================================\n")
+
+        return {
+            "reply": "I'm sorry, I couldn't process the AI response. Please try again.",
+            "intent": "other",
+            "sentiment": "neutral",
+            "payment_commitment": False,
+            "followup_days": None,
+            "risk_level": "medium",
+            "need_human_agent": True,
+        }
+
+    except Exception as e:
+        print("\n========== Gemini Error ==========")
+        print(e)
+        print("==================================\n")
+
+        return {
+            "reply": "I'm sorry, our AI service is temporarily unavailable. Please try again later.",
+            "intent": "other",
+            "sentiment": "neutral",
+            "payment_commitment": False,
+            "followup_days": None,
+            "risk_level": "high",
+            "need_human_agent": True,
+        }

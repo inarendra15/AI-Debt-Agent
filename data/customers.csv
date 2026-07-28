@@ -1,0 +1,6 @@
+customer_id,name,loan_type,loan_amount,emi,outstanding,days_overdue
+1001,Rahul Sharma,Personal Loan,500000,8500,38000,43
+1002,Priya Verma,Car Loan,800000,12000,24000,18
+1003,Amit Kumar,Home Loan,3500000,28000,56000,67
+1004,Neha Singh,Education Loan,700000,9000,18000,25
+1005,Arjun Patel,Business Loan,1200000,22000,110000,95
