@@ -157,3 +157,26 @@ def customers(
         min_overdue=min_overdue,
         sort_by=sort_by,
     )
+#----------dashboard analytics--------
+from app.services.dashboard_analytics import get_dashboard_analytics
+@router.get("/analytics")
+def analytics(
+    current_user=Depends(require_admin)
+):
+    return get_dashboard_analytics()
+
+#-------report service---------
+from app.services.report_service import get_reports
+@router.get("/reports")
+def reports(
+    current_user=Depends(require_admin)
+):
+    return get_reports()
+
+#---------chart service----------
+from app.services.chart_service import get_chart_data
+@router.get("/charts")
+def charts(
+    current_user=Depends(require_admin)
+):
+    return get_chart_data()
