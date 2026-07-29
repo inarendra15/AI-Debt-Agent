@@ -59,3 +59,43 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
 
     role = Column(String, default="agent")
+
+class CollectionCase(Base):
+    __tablename__ = "collection_cases"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    customer_id = Column(
+        Integer,
+        ForeignKey("customers.customer_id")
+    )
+
+    assigned_agent = Column(String, nullable=True)
+
+    status = Column(
+        String,
+        default="OPEN"
+    )
+
+    priority = Column(
+        String,
+        default="MEDIUM"
+    )
+
+    next_followup = Column(
+        DateTime,
+        nullable=True
+    )
+
+    created_at = Column(
+        DateTime,
+        server_default=func.now()
+    )
+
+    updated_at = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+    customer = relationship("Customer")

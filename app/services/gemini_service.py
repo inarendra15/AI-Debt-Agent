@@ -1,10 +1,12 @@
 import json
+import traceback
 
 from google import genai
 
 from app.config import GEMINI_API_KEY, MODEL_NAME
 from app.core.prompts import SYSTEM_PROMPT
 from app.services.conversation_service import get_history
+from app.services.workflow_service import apply_ai_workflow
 
 # Initialize Gemini Client
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -40,13 +42,13 @@ def ask_gemini(customer: dict, customer_message: str) -> dict:
 CUSTOMER INFORMATION
 --------------------------------------------------
 
-customer.customer_id
-customer.name
-customer.loan_type
-customer.loan_amount
-customer.emi
-customer.outstanding
-customer.days_overdue
+Customer ID: {customer.customer_id}
+Name: {customer.name}
+Loan Type: {customer.loan_type}
+Loan Amount: {customer.loan_amount}
+EMI: {customer.emi}
+Outstanding: {customer.outstanding}
+Days Overdue: {customer.days_overdue}
 
 --------------------------------------------------
 CONVERSATION HISTORY
@@ -69,7 +71,6 @@ Customer: {customer_message}
 
         response_text = response.text.strip()
 
-        # Remove markdown if Gemini wraps JSON
         if response_text.startswith("```json"):
             response_text = (
                 response_text.replace("```json", "")
@@ -85,7 +86,6 @@ Customer: {customer_message}
 
         result = json.loads(response_text)
 
-        # Validate required fields
         required_keys = [
             "reply",
             "intent",
@@ -100,34 +100,18 @@ Customer: {customer_message}
             if key not in result:
                 raise ValueError(f"Missing key: {key}")
 
+        apply_ai_workflow(customer.customer_id, result)
+
         return result
 
     except json.JSONDecodeError:
         print("\n========== JSON Decode Error ==========")
         print(response_text)
         print("=======================================\n")
+        raise
 
-        return {
-            "reply": "I'm sorry, I couldn't process the AI response. Please try again.",
-            "intent": "other",
-            "sentiment": "neutral",
-            "payment_commitment": False,
-            "followup_days": None,
-            "risk_level": "medium",
-            "need_human_agent": True,
-        }
-
-    except Exception as e:
+    except Exception:
         print("\n========== Gemini Error ==========")
-        print(e)
+        traceback.print_exc()
         print("==================================\n")
-
-        return {
-            "reply": "I'm sorry, our AI service is temporarily unavailable. Please try again later.",
-            "intent": "other",
-            "sentiment": "neutral",
-            "payment_commitment": False,
-            "followup_days": None,
-            "risk_level": "high",
-            "need_human_agent": True,
-        }
+        raise

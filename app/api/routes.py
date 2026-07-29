@@ -180,3 +180,44 @@ def charts(
     current_user=Depends(require_admin)
 ):
     return get_chart_data()
+
+#----------case-------------
+from app.schemas.case_schema import (
+    CaseCreate,
+    CaseUpdate,
+    CaseResponse,
+)
+
+from app.services.case_service import (
+    create_case,
+    get_all_cases,
+    get_case,
+    update_case,
+)
+@router.post("/cases", response_model=CaseResponse)
+def add_case(
+    case: CaseCreate,
+    current_user=Depends(require_admin),
+):
+    return create_case(case)
+
+@router.get("/cases", response_model=list[CaseResponse])
+def list_cases(
+    current_user=Depends(require_admin),
+):
+    return get_all_cases()
+
+@router.get("/cases/{case_id}", response_model=CaseResponse)
+def single_case(
+    case_id: int,
+    current_user=Depends(require_admin),
+):
+    return get_case(case_id)
+
+@router.put("/cases/{case_id}", response_model=CaseResponse)
+def edit_case(
+    case_id: int,
+    case: CaseUpdate,
+    current_user=Depends(require_admin),
+):
+    return update_case(case_id, case)
