@@ -5,10 +5,12 @@ from app.api.routes import router
 from app.database.database import Base, engine
 from app.database import models
 from app.database.seed_database import seed_customers
+from app.database.seed_users import seed_users
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
 seed_customers()
+seed_users()
 
 app = FastAPI(
     title="AI Debt Collection Agent"
