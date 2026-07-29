@@ -10,6 +10,9 @@ from app.core.auth import get_current_user
 from app.core.roles import require_admin
 from app.services.dashboard_service import get_dashboard
 from app.core.roles import require_admin
+from app.services.timeline_service import get_customer_timeline
+from app.schemas.timeline_schema import TimelineResponse
+
 
 from app.services.conversation_service import (
     add_message,
@@ -157,6 +160,14 @@ def customers(
         min_overdue=min_overdue,
         sort_by=sort_by,
     )
+
+@router.get(
+    "/timeline/{customer_id}",
+    response_model=list[TimelineResponse]
+)
+def customer_timeline(customer_id: int):
+
+    return get_customer_timeline(customer_id)
 #----------dashboard analytics--------
 from app.services.dashboard_analytics import get_dashboard_analytics
 @router.get("/analytics")
