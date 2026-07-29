@@ -143,6 +143,17 @@ from app.services.customer_list_service import get_customers
 def customers(
     page: int = 1,
     limit: int = 10,
-    current_user=Depends(require_admin)
+    name: str = None,
+    loan_type: str = None,
+    min_overdue: int = None,
+    sort_by: str = None,
+    current_user=Depends(require_admin),
 ):
-    return get_customers(page, limit)
+    return get_customers(
+        page=page,
+        limit=limit,
+        name=name,
+        loan_type=loan_type,
+        min_overdue=min_overdue,
+        sort_by=sort_by,
+    )
