@@ -1,13 +1,16 @@
-import pandas as pd
-
-df = pd.read_csv("data/customers.csv")
+from app.database.database import SessionLocal
+from app.database.models import Customer
 
 
 def get_customer(customer_id: int):
+    db = SessionLocal()
 
-    customer = df[df["customer_id"] == customer_id]
+    customer = (
+        db.query(Customer)
+        .filter(Customer.customer_id == customer_id)
+        .first()
+    )
 
-    if customer.empty:
-        return None
+    db.close()
 
-    return customer.iloc[0].to_dict()
+    return customer

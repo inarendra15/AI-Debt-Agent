@@ -4,6 +4,7 @@ from app.schemas.chat_schema import ChatRequest
 from app.services.customer_service import get_customer
 from app.services.gemini_service import ask_gemini
 from app.services.business_rules import evaluate_case
+from app.services.analytics_service import generate_analytics
 from app.services.conversation_service import (
     add_message,
     get_history,
@@ -37,19 +38,24 @@ def chat(request: ChatRequest):
         request.message
     )
 
-    # Save only the AI reply in conversation history
+    # Save AI reply
     add_message(
         request.customer_id,
         "agent",
         result["reply"]
     )
 
-    # Return the complete structured JSON
+    # Generate workflow
     workflow = evaluate_case(result)
 
+    # Generate analytics
+    analytics = generate_analytics(result)
+
+    # Return complete structured response
     return {
-    **result,
-    "workflow": workflow
+        **result,
+        "analytics": analytics,
+        "workflow": workflow
     }
 
 

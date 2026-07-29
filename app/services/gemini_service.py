@@ -22,7 +22,7 @@ def ask_gemini(customer: dict, customer_message: str) -> dict:
     """
 
     # Fetch previous conversation
-    history = get_history(customer["customer_id"])
+    history = get_history(customer.customer_id)
 
     conversation = ""
 
@@ -40,13 +40,13 @@ def ask_gemini(customer: dict, customer_message: str) -> dict:
 CUSTOMER INFORMATION
 --------------------------------------------------
 
-Customer ID: {customer['customer_id']}
-Name: {customer['name']}
-Loan Type: {customer['loan_type']}
-Loan Amount: ₹{customer['loan_amount']}
-Outstanding Amount: ₹{customer['outstanding']}
-Monthly EMI: ₹{customer['emi']}
-Days Overdue: {customer['days_overdue']}
+customer.customer_id
+customer.name
+customer.loan_type
+customer.loan_amount
+customer.emi
+customer.outstanding
+customer.days_overdue
 
 --------------------------------------------------
 CONVERSATION HISTORY

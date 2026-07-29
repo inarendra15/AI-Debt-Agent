@@ -1,24 +1,37 @@
-# In-memory conversation storage
+from app.database.database import SessionLocal
+from app.database.models import Conversation
 
-conversation_store = {}
+
+def add_message(customer_id: int, sender: str, message: str):
+    db = SessionLocal()
+
+    conversation = Conversation(
+        customer_id=customer_id,
+        sender=sender,
+        message=message
+    )
+
+    db.add(conversation)
+    db.commit()
+    db.close()
 
 
 def get_history(customer_id: int):
-    return conversation_store.get(customer_id, [])
+    db = SessionLocal()
 
-
-def add_message(customer_id: int, role: str, message: str):
-
-    if customer_id not in conversation_store:
-        conversation_store[customer_id] = []
-
-    conversation_store[customer_id].append(
-        {
-            "role": role,
-            "message": message
-        }
+    conversations = (
+        db.query(Conversation)
+        .filter(Conversation.customer_id == customer_id)
+        .order_by(Conversation.timestamp.asc())
+        .all()
     )
 
+    db.close()
 
-def clear_history(customer_id: int):
-    conversation_store.pop(customer_id, None)
+    return [
+        {
+            "role": conv.sender,
+            "message": conv.message
+        }
+        for conv in conversations
+    ]
