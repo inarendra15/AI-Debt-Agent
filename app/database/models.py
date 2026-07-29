@@ -193,3 +193,50 @@ class TimelineEvent(Base):
         "CollectionCase",
         back_populates="timeline",
     )
+
+# =====================================================
+# AI Strategy Recommendation
+# =====================================================
+
+class StrategyRecommendation(Base):
+    __tablename__ = "strategy_recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    customer_id = Column(
+        Integer,
+        ForeignKey("customers.customer_id"),
+        nullable=False,
+    )
+
+    recommended_strategy = Column(
+        String,
+        nullable=False,
+    )
+
+    risk_level = Column(
+        String,
+        nullable=False,
+    )
+
+    confidence = Column(
+        Integer,
+        nullable=False,
+    )
+
+    reason = Column(
+        Text,
+        nullable=False,
+    )
+
+    next_action = Column(
+        Text,
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+    )
+
+    customer = relationship("Customer")

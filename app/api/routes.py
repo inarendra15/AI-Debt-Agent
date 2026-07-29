@@ -12,6 +12,10 @@ from app.services.dashboard_service import get_dashboard
 from app.core.roles import require_admin
 from app.services.timeline_service import get_customer_timeline
 from app.schemas.timeline_schema import TimelineResponse
+from app.services.strategy_service import recommend_strategy
+from app.schemas.strategy_schema import StrategyResponse
+from app.services.recommendation_service import get_recommendations
+from app.schemas.recommendation_schema import RecommendationResponse
 
 
 from app.services.conversation_service import (
@@ -232,3 +236,20 @@ def edit_case(
     current_user=Depends(require_admin),
 ):
     return update_case(case_id, case)
+
+#----------ai recooo--------
+@router.post(
+    "/ai/recommend-strategy/{customer_id}",
+    response_model=StrategyResponse,
+)
+def ai_recommend_strategy(customer_id: int):
+
+    return recommend_strategy(customer_id)
+
+@router.get(
+    "/ai/recommendations/{customer_id}",
+    response_model=list[RecommendationResponse],
+)
+def recommendation_history(customer_id: int):
+
+    return get_recommendations(customer_id)

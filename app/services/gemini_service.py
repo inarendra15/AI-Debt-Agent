@@ -12,15 +12,14 @@ from app.services.workflow_service import apply_ai_workflow
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 
-def ask_gemini(customer: dict, customer_message: str) -> dict:
-    """
-    Generate a structured AI response using:
-    - Customer details
-    - Conversation history
-    - Professional debt collection prompt
+# ==========================================================
+# AI Customer Conversation
+# ==========================================================
 
-    Returns:
-        dict
+def ask_gemini(customer, customer_message: str) -> dict:
+    """
+    Generate a structured AI response for debt collection
+    conversations.
     """
 
     # Fetch previous conversation
@@ -34,7 +33,6 @@ def ask_gemini(customer: dict, customer_message: str) -> dict:
         else:
             conversation += f"Agent: {msg['message']}\n"
 
-    # Build prompt
     prompt = f"""
 {SYSTEM_PROMPT}
 
@@ -64,6 +62,7 @@ Customer: {customer_message}
 """
 
     try:
+
         response = client.models.generate_content(
             model=MODEL_NAME,
             contents=prompt,
@@ -114,4 +113,89 @@ Customer: {customer_message}
         print("\n========== Gemini Error ==========")
         traceback.print_exc()
         print("==================================\n")
+        raise
+
+
+# ==========================================================
+# AI Strategy Recommendation
+# ==========================================================
+
+def recommend_collection_strategy(context: dict) -> dict:
+    """
+    Analyze customer information and recommend
+    the best debt collection strategy.
+    """
+
+    context_json = json.dumps(context, indent=2)
+
+    prompt = f"""
+You are an expert AI Debt Collection Advisor.
+
+Analyze the following customer profile.
+
+{context_json}
+
+Based on the customer profile, provide the best debt collection strategy.
+
+Return ONLY valid JSON.
+
+Required JSON format:
+
+{{
+    "recommended_strategy": "",
+    "risk_level": "",
+    "confidence": 0,
+    "reason": "",
+    "next_action": ""
+}}
+"""
+
+    try:
+
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
+
+        response_text = response.text.strip()
+
+        if response_text.startswith("```json"):
+            response_text = (
+                response_text.replace("```json", "")
+                .replace("```", "")
+                .strip()
+            )
+
+        elif response_text.startswith("```"):
+            response_text = (
+                response_text.replace("```", "")
+                .strip()
+            )
+
+        result = json.loads(response_text)
+
+        required_keys = [
+            "recommended_strategy",
+            "risk_level",
+            "confidence",
+            "reason",
+            "next_action",
+        ]
+
+        for key in required_keys:
+            if key not in result:
+                raise ValueError(f"Missing key: {key}")
+
+        return result
+
+    except json.JSONDecodeError:
+        print("\n========== Strategy JSON Error ==========")
+        print(response_text)
+        print("=========================================\n")
+        raise
+
+    except Exception:
+        print("\n========== Strategy Recommendation Error ==========")
+        traceback.print_exc()
+        print("===============================================\n")
         raise
