@@ -8,6 +8,8 @@ from app.services.analytics_service import generate_analytics
 from fastapi import Depends
 from app.core.auth import get_current_user
 from app.core.roles import require_admin
+from app.services.dashboard_service import get_dashboard
+from app.core.roles import require_admin
 
 from app.services.conversation_service import (
     add_message,
@@ -123,10 +125,24 @@ def login(
         "access_token": token,
         "token_type": "bearer"
     }
-
+#------------admin/user---------------
 @router.get("/admin/users")
 def list_users(current_user=Depends(require_admin)):
     return {
         "message": "Welcome Admin!",
         "current_user": current_user
     }
+#------------Dashboard--------------
+@router.get("/dashboard")
+def dashboard(current_user=Depends(require_admin)):
+    return get_dashboard()
+
+#---------customer service--------
+from app.services.customer_list_service import get_customers
+@router.get("/customers")
+def customers(
+    page: int = 1,
+    limit: int = 10,
+    current_user=Depends(require_admin)
+):
+    return get_customers(page, limit)
