@@ -4,6 +4,6 @@ from pydantic import BaseModel
 class StrategyResponse(BaseModel):
     recommended_strategy: str
     risk_level: str
-    confidence: int
+    confidence: float
     reason: str
     next_action: str

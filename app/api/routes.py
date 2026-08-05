@@ -9,7 +9,6 @@ from fastapi import Depends
 from app.core.auth import get_current_user
 from app.core.roles import require_admin
 from app.services.dashboard_service import get_dashboard
-from app.core.roles import require_admin
 from app.services.timeline_service import get_customer_timeline
 from app.schemas.timeline_schema import TimelineResponse
 from app.services.strategy_service import recommend_strategy
@@ -218,16 +217,25 @@ def add_case(
 
 @router.get("/cases", response_model=list[CaseResponse])
 def list_cases(
-    current_user=Depends(require_admin),
+    current_user=Depends(get_current_user),
 ):
     return get_all_cases()
+
 
 @router.get("/cases/{case_id}", response_model=CaseResponse)
 def single_case(
     case_id: int,
-    current_user=Depends(require_admin),
+    current_user=Depends(get_current_user),
 ):
-    return get_case(case_id)
+    case = get_case(case_id)
+
+    if not case:
+        raise HTTPException(
+            status_code=404,
+            detail="Case not found",
+        )
+
+    return case
 
 @router.put("/cases/{case_id}", response_model=CaseResponse)
 def edit_case(
@@ -240,8 +248,19 @@ def edit_case(
 #----------ai recooo--------
 @router.post(
     "/ai/recommend-strategy/{customer_id}",
-    response_model=StrategyResponse,
+    response_model=StrategyResponse
 )
+def ai_recommend_strategy(customer_id: int):
+
+    result = recommend_strategy(customer_id)
+
+    if result.get("error"):
+        raise HTTPException(
+            status_code=404,
+            detail=result["error"]
+        )
+
+    return result
 def ai_recommend_strategy(customer_id: int):
 
     return recommend_strategy(customer_id)
